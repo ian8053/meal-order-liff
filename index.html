@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>點餐系統</title>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+
+        .header .date {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .header .deadline {
+            font-size: 13px;
+            color: #ffcc00;
+            margin-top: 5px;
+        }
+
+        .user-info {
+            background: white;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .user-info .name {
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .meal-option {
+            padding: 10px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .meal-option:hover {
+            border-color: #667eea;
+        }
+
+        .meal-option.selected {
+            border-color: #4CAF50;
+            background: #f0fff0;
+        }
+
+        .meal-option .option-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .meal-option .option-desc {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .skip-option {
+            padding: 10px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            color: #999;
+        }
+
+        .skip-option:hover {
+            border-color: #f44336;
+        }
+
+        .skip-option.selected {
+            border-color: #f44336;
+            background: #fff5f5;
+            color: #f44336;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .submit-btn:hover {
+            background: #45a049;
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            padding: 50px;
+            font-size: 18px;
+        }
+
+        .success-message {
+            background: white;
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .success-message .icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        .success-message h2 {
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+
+        .success-message .order-summary {
+            text-align: left;
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .close-btn {
+            width: 100%;
+            padding: 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .kcal {
+            font-size: 11px;
+            color: #4CAF50;
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="loading" class="loading">
+            載入中...
+        </div>
+
+        <div id="main-content" style="display: none;">
+            <div class="header">
+                <h1>🍽️ 明日點餐</h1>
+                <div class="date" id="order-date"></div>
+                <div class="deadline">⏰ 截止時間：17:00</div>
+            </div>
+
+            <div class="user-info" id="user-info">
+                <img id="user-avatar" src="" alt="avatar">
+                <div class="name" id="user-name"></div>
+            </div>
+
+            <div id="meal-sections"></div>
+
+            <button class="submit-btn" id="submit-btn" onclick="submitOrder()">
+                送出點餐
+            </button>
+        </div>
+
+        <div id="success-content" style="display: none;">
+            <div class="success-message">
+                <div class="icon">✅</div>
+                <h2>點餐完成！</h2>
+                <div class="order-summary" id="order-summary"></div>
+            </div>
+            <button class="close-btn" onclick="closeLiff()">關閉</button>
+        </div>
+    </div>
+
+    <script>
+        // 設定
+        const LIFF_ID = "2009034111-mrAxuPkT";
+
+        // 完整菜單資料
+        const menuData = {
+            breakfast: {
+                name: "早餐",
+                icon: "🍳",
+                time: "07:30-08:00",
+                kcal: 400,
+                options: [
+                    { id: "b1", name: "鮭魚炒青菜+蛋", desc: "鮭魚100g、青菜200g、雞蛋1顆、飯80g" },
+                    { id: "b2", name: "蝦仁烘蛋+牛奶", desc: "蝦仁6隻、蛋2個、牛奶150ml、燕麥30g" },
+                    { id: "b3", name: "雞肉飯糰", desc: "去皮雞肉80g、青菜100g、飯80g" },
+                    { id: "b4", name: "蒸蛋", desc: "燕麥20g、蛋2顆、海鮮60g、2碗青菜" },
+                    { id: "b5", name: "海鮮豆腐餅", desc: "海鮮80g、豆腐100g、燕麥40g、蛋1個、青菜100g" }
+                ]
+            },
+            morning_snack: {
+                name: "早點心",
+                icon: "🥐",
+                time: "10:30-11:00",
+                kcal: 150,
+                options: [
+                    { id: "ms1", name: "蛋2個", desc: "" },
+                    { id: "ms2", name: "去皮雞腿肉捲", desc: "120g" },
+                    { id: "ms3", name: "鮭魚蔬菜", desc: "鮭魚80g" },
+                    { id: "ms4", name: "石斑魚排", desc: "120g" },
+                    { id: "ms5", name: "溫牛奶燕麥", desc: "牛奶200ml+燕麥片30g" },
+                    { id: "ms6", name: "蛋奶布丁", desc: "蛋1個+牛奶150ml" }
+                ]
+            },
+            lunch: {
+                name: "午餐",
+                icon: "🍱",
+                time: "13:00-13:30",
+                kcal: 400,
+                options: [
+                    { id: "l1", name: "標準餐", desc: "青菜200g + 肉類120g + 飯80g" }
+                ],
+                hasSoup: true
+            },
+            afternoon_snack: {
+                name: "下午點心",
+                icon: "🍰",
+                time: "15:30-16:00",
+                kcal: 150,
+                options: [
+                    { id: "as1", name: "蛋2個", desc: "" },
+                    { id: "as2", name: "去皮雞腿肉捲", desc: "120g" },
+                    { id: "as3", name: "鮭魚蔬菜", desc: "鮭魚80g" },
+                    { id: "as4", name: "石斑魚排", desc: "120g" },
+                    { id: "as5", name: "溫牛奶燕麥", desc: "牛奶200ml+燕麥片30g" },
+                    { id: "as6", name: "蛋奶布丁", desc: "蛋1個+牛奶150ml" },
+                    { id: "as7", name: "優酪乳", desc: "200ml（下午限定）" }
+                ]
+            },
+            dinner: {
+                name: "晚餐",
+                icon: "🍽️",
+                time: "19:00-19:30",
+                kcal: 400,
+                options: [
+                    { id: "d1", name: "標準餐", desc: "青菜200g + 肉類120g + 飯80g" }
+                ],
+                hasSoup: true
+            },
+            late_night: {
+                name: "宵夜",
+                icon: "🌙",
+                time: "21:30-22:00",
+                kcal: 150,
+                options: [
+                    { id: "ln1", name: "蛋2個", desc: "" },
+                    { id: "ln2", name: "去皮雞腿肉捲", desc: "120g" },
+                    { id: "ln3", name: "鮭魚蔬菜", desc: "鮭魚80g" },
+                    { id: "ln4", name: "石斑魚排", desc: "120g" },
+                    { id: "ln5", name: "溫牛奶燕麥", desc: "牛奶200ml+燕麥片30g" },
+                    { id: "ln6", name: "蛋奶布丁", desc: "蛋1個+牛奶150ml" }
+                ]
+            }
+        };
+
+        // 湯品選項
+        const soupOptions = [
+            { id: "soup1", name: "薑絲石斑魚湯", desc: "魚肉100g+薑絲" },
+            { id: "soup2", name: "蛤蜊絲瓜湯", desc: "蛤蜊15個+絲瓜100g" },
+            { id: "soup3", name: "鮮蝦豆腐湯", desc: "蝦子6隻+板豆腐半盒" },
+            { id: "soup4", name: "雞腿香菇湯", desc: "去皮雞腿1隻+香菇3朵" },
+            { id: "soup5", name: "鮮魚味噌湯", desc: "鮭魚塊50g+味噌" }
+        ];
+
+        // 使用者選擇
+        let userSelections = {};
+        let userProfile = null;
+
+        // 初始化
+        async function initializeLiff() {
+            try {
+                await liff.init({ liffId: LIFF_ID });
+
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                    return;
+                }
+
+                // 取得使用者資料
+                userProfile = await liff.getProfile();
+                document.getElementById("user-avatar").src = userProfile.pictureUrl || "";
+                document.getElementById("user-name").textContent = userProfile.displayName;
+
+                // 設定日期
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const dateStr = tomorrow.toLocaleDateString("zh-TW", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    weekday: "long"
+                });
+                document.getElementById("order-date").textContent = dateStr;
+
+                // 初始化選擇
+                Object.keys(menuData).forEach(mealId => {
+                    userSelections[mealId] = null; // null = 還沒選
+                });
+                userSelections["lunch_soup"] = null;
+                userSelections["dinner_soup"] = null;
+
+                // 渲染菜單
+                renderMenuSections();
+
+                // 顯示主內容
+                document.getElementById("loading").style.display = "none";
+                document.getElementById("main-content").style.display = "block";
+
+            } catch (error) {
+                console.error("LIFF 初始化失敗:", error);
+                document.getElementById("loading").textContent = "載入失敗，請重試";
+            }
+        }
+
+        // 渲染菜單區塊
+        function renderMenuSections() {
+            const container = document.getElementById("meal-sections");
+            let html = "";
+
+            Object.keys(menuData).forEach(mealId => {
+                const meal = menuData[mealId];
+                html += `
+                    <div class="section">
+                        <div class="section-title">
+                            ${meal.icon} ${meal.name}
+                            <span class="kcal">${meal.time} (${meal.kcal}kcal)</span>
+                        </div>
+                        ${meal.options.map(opt => `
+                            <div class="meal-option ${userSelections[mealId] === opt.id ? 'selected' : ''}"
+                                 onclick="selectOption('${mealId}', '${opt.id}')">
+                                <div class="option-name">${opt.name}</div>
+                                ${opt.desc ? `<div class="option-desc">${opt.desc}</div>` : ''}
+                            </div>
+                        `).join('')}
+                        <div class="skip-option ${userSelections[mealId] === 'skip' ? 'selected' : ''}"
+                             onclick="selectOption('${mealId}', 'skip')">
+                            ❌ 不吃
+                        </div>
+                        ${meal.hasSoup ? renderSoupSection(mealId) : ''}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // 渲染湯品選項
+        function renderSoupSection(mealId) {
+            const soupKey = mealId + "_soup";
+            return `
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #eee;">
+                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">🥣 湯品（餐前20分鐘）</div>
+                    ${soupOptions.map(opt => `
+                        <div class="meal-option ${userSelections[soupKey] === opt.id ? 'selected' : ''}"
+                             onclick="selectOption('${soupKey}', '${opt.id}')"
+                             style="padding: 8px;">
+                            <div class="option-name" style="font-size: 13px;">${opt.name}</div>
+                            <div class="option-desc">${opt.desc}</div>
+                        </div>
+                    `).join('')}
+                    <div class="skip-option ${userSelections[soupKey] === 'skip' ? 'selected' : ''}"
+                         onclick="selectOption('${soupKey}', 'skip')"
+                         style="padding: 8px; font-size: 13px;">
+                        不要湯
+                    </div>
+                </div>
+            `;
+        }
+
+        // 選擇選項
+        function selectOption(mealId, optionId) {
+            userSelections[mealId] = optionId;
+            renderMenuSections();
+        }
+
+        // 取得選項名稱
+        function getOptionName(mealId, optionId) {
+            if (optionId === 'skip') return '不吃';
+            if (optionId === null) return '未選擇';
+
+            // 湯品
+            if (mealId.includes('_soup')) {
+                const soup = soupOptions.find(s => s.id === optionId);
+                return soup ? soup.name : optionId;
+            }
+
+            // 餐點
+            const baseMealId = mealId.replace('_soup', '');
+            const meal = menuData[baseMealId];
+            if (meal) {
+                const option = meal.options.find(o => o.id === optionId);
+                return option ? option.name : optionId;
+            }
+
+            return optionId;
+        }
+
+        // 送出點餐
+        async function submitOrder() {
+            // 檢查是否都有選擇
+            const unselected = Object.keys(menuData).filter(id => userSelections[id] === null);
+            if (unselected.length > 0) {
+                const names = unselected.map(id => menuData[id].name).join('、');
+                alert(`請選擇 ${names} 的餐點`);
+                return;
+            }
+
+            const btn = document.getElementById("submit-btn");
+            btn.disabled = true;
+            btn.textContent = "送出中...";
+
+            try {
+                // 組合訂單摘要
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const dateStr = tomorrow.toLocaleDateString("zh-TW");
+
+                let summary = `📋 ${userProfile.displayName} 的點餐\n`;
+                summary += `📅 ${dateStr}\n`;
+                summary += `────────────\n`;
+
+                Object.keys(menuData).forEach(mealId => {
+                    const meal = menuData[mealId];
+                    const selection = getOptionName(mealId, userSelections[mealId]);
+                    summary += `${meal.icon} ${meal.name}: ${selection}\n`;
+
+                    // 湯品
+                    if (meal.hasSoup) {
+                        const soupKey = mealId + "_soup";
+                        const soupSelection = getOptionName(soupKey, userSelections[soupKey]);
+                        if (userSelections[soupKey] && userSelections[soupKey] !== 'skip') {
+                            summary += `   🥣 湯: ${soupSelection}\n`;
+                        }
+                    }
+                });
+
+                // 使用 LIFF 發送訊息
+                if (liff.isApiAvailable("sendMessages")) {
+                    await liff.sendMessages([{
+                        type: "text",
+                        text: summary
+                    }]);
+                }
+
+                // 顯示成功訊息
+                let summaryHtml = "";
+                Object.keys(menuData).forEach(mealId => {
+                    const meal = menuData[mealId];
+                    const selection = getOptionName(mealId, userSelections[mealId]);
+                    summaryHtml += `<b>${meal.icon} ${meal.name}:</b> ${selection}<br>`;
+
+                    if (meal.hasSoup && userSelections[mealId + "_soup"] && userSelections[mealId + "_soup"] !== 'skip') {
+                        summaryHtml += `&nbsp;&nbsp;🥣 ${getOptionName(mealId + "_soup", userSelections[mealId + "_soup"])}<br>`;
+                    }
+                });
+
+                document.getElementById("order-summary").innerHTML = summaryHtml;
+                document.getElementById("main-content").style.display = "none";
+                document.getElementById("success-content").style.display = "block";
+
+            } catch (error) {
+                console.error("送出失敗:", error);
+                alert("送出失敗，請重試");
+                btn.disabled = false;
+                btn.textContent = "送出點餐";
+            }
+        }
+
+        // 關閉 LIFF
+        function closeLiff() {
+            if (liff.isInClient()) {
+                liff.closeWindow();
+            } else {
+                window.close();
+            }
+        }
+
+        // 啟動
+        initializeLiff();
+    </script>
+</body>
+</html>
