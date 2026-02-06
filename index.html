@@ -270,54 +270,16 @@
 
     <script>
         const LIFF_ID = "2009064844-ryRJYaBr";
+        const API_URL = "https://cool-hill-d1b7.ian19910503.workers.dev/api/menu";
 
-        // 菜單資料
-        const BREAKFAST = [
-            { id: "b1", name: "鮭魚炒青菜+蛋" },
-            { id: "b2", name: "蝦仁烘蛋+牛奶" },
-            { id: "b3", name: "雞肉飯糰" },
-            { id: "b4", name: "蒸蛋" },
-            { id: "b5", name: "海鮮豆腐餅" }
-        ];
+        // 菜單資料（從 API 載入）
+        let BREAKFAST = [];
+        let SNACKS = [];
+        let MEATS = [];
+        let CARBS = [];
 
-        const SNACKS = [
-            { id: "s1", name: "蛋2個" },
-            { id: "s2", name: "去皮雞腿肉捲" },
-            { id: "s3", name: "鮭魚蔬菜" },
-            { id: "s4", name: "石斑魚排" },
-            { id: "s5", name: "溫牛奶燕麥" },
-            { id: "s6", name: "蛋奶布丁" },
-            { id: "s7", name: "優酪乳(下午限定)" },
-            { id: "soup1", name: "🥣薑絲石斑魚湯" },
-            { id: "soup2", name: "🥣蛤蜊絲瓜湯" },
-            { id: "soup3", name: "🥣鮮蝦豆腐湯" },
-            { id: "soup4", name: "🥣雞腿香菇湯" },
-            { id: "soup5", name: "🥣鮮魚味噌湯" }
-        ];
-
-        const MEATS = [
-            { id: "m1", name: "雞肉" },
-            { id: "m2", name: "豬肉" },
-            { id: "m3", name: "牛肉" },
-            { id: "m4", name: "羊肉" },
-            { id: "m5", name: "魚" },
-            { id: "m6", name: "蝦蟹貝類" }
-        ];
-
-        const CARBS = [
-            { id: "c1", name: "糙米飯" },
-            { id: "c2", name: "燕麥" },
-            { id: "c3", name: "地瓜" },
-            { id: "c4", name: "南瓜" },
-            { id: "c5", name: "芋頭" }
-        ];
-
+        // 固定選項
         const SOUPS = [
-            { id: "soup1", name: "薑絲石斑魚湯" },
-            { id: "soup2", name: "蛤蜊絲瓜湯" },
-            { id: "soup3", name: "鮮蝦豆腐湯" },
-            { id: "soup4", name: "雞腿香菇湯" },
-            { id: "soup5", name: "鮮魚味噌湯" },
             { id: "skip", name: "不要湯" }
         ];
 
@@ -360,6 +322,19 @@
                 document.getElementById("orderDate").textContent = tomorrow.toLocaleDateString("zh-TW", {
                     month: "long", day: "numeric", weekday: "long"
                 });
+
+                // 從 API 載入菜單
+                document.getElementById("loading").textContent = "載入菜單中...";
+                try {
+                    const menuRes = await fetch(API_URL);
+                    const menu = await menuRes.json();
+                    BREAKFAST = menu.breakfast || [];
+                    SNACKS = menu.snacks || [];
+                    MEATS = menu.meats || [];
+                    CARBS = menu.carbs || [];
+                } catch (menuErr) {
+                    console.error("載入菜單失敗:", menuErr);
+                }
 
                 renderOptions();
 
