@@ -338,27 +338,33 @@
             try {
                 await liff.init({ liffId: LIFF_ID });
 
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                    return;
-                }
-
-                userProfile = await liff.getProfile();
-                document.getElementById("userName").textContent = `👤 ${userProfile.displayName}`;
-
+                // 設定日期
                 const tomorrow = new Date();
                 tomorrow.setDate(tomorrow.getDate() + 1);
                 document.getElementById("orderDate").textContent = tomorrow.toLocaleDateString("zh-TW", {
                     month: "long", day: "numeric", weekday: "long"
                 });
 
+                // 先渲染選項
                 renderOptions();
+
+                if (liff.isLoggedIn()) {
+                    userProfile = await liff.getProfile();
+                    document.getElementById("userName").textContent = `👤 ${userProfile.displayName}`;
+                } else if (liff.isInClient()) {
+                    // 在 LINE 內但未登入，自動登入
+                    liff.login();
+                    return;
+                } else {
+                    // 在外部瀏覽器測試
+                    document.getElementById("userName").textContent = `👤 測試模式`;
+                }
 
                 document.getElementById("loading").style.display = "none";
                 document.getElementById("main").style.display = "block";
             } catch (e) {
                 console.error(e);
-                document.getElementById("loading").textContent = "載入失敗，請重試";
+                document.getElementById("loading").textContent = "載入失敗: " + e.message;
             }
         }
 
