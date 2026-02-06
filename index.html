@@ -180,10 +180,10 @@
             <div class="options" id="breakfast-options"></div>
         </div>
 
-        <!-- 早點心 -->
+        <!-- 送出餐點 -->
         <div class="section">
             <div class="section-header" style="background:#F3E5F5;">
-                🥐 早點心 <span class="time">10:30-11:00</span>
+                🥐 送出餐點 <span class="time">10:30-11:00</span>
             </div>
             <div class="options" id="morning_snack-options"></div>
         </div>
@@ -484,8 +484,8 @@
                 // 早餐
                 summary += `🍳 早餐: ${getOptionName(BREAKFAST, selections.breakfast)}\n`;
 
-                // 早點心
-                summary += `🥐 早點心: ${getOptionName(SNACKS, selections.morning_snack)}\n`;
+                // 送出餐點
+                summary += `🥐 送出餐點: ${getOptionName(SNACKS, selections.morning_snack)}\n`;
 
                 // 午餐
                 if (selections.lunch.skip) {
