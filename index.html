@@ -343,6 +343,15 @@
                     return;
                 }
 
+                // 第一次開啟時強制重新登入以取得新權限
+                const hasRelogin = sessionStorage.getItem('liff_relogin');
+                if (!hasRelogin) {
+                    sessionStorage.setItem('liff_relogin', 'true');
+                    liff.logout();
+                    liff.login();
+                    return;
+                }
+
                 userProfile = await liff.getProfile();
                 document.getElementById("userName").textContent = `👤 ${userProfile.displayName}`;
 
