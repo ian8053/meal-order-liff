@@ -519,43 +519,30 @@
 
                 // 發送訊息
                 const inClient = liff.isInClient();
-                const canSend = liff.isApiAvailable("sendMessages");
 
-                btn.textContent = '檢查中... inClient=' + inClient + ' canSend=' + canSend;
+                btn.textContent = '發送中...';
 
-                if (inClient && canSend) {
-                    btn.textContent = '發送訊息中...';
+                if (inClient) {
+                    // 在 LINE 內，直接發送
                     try {
                         await liff.sendMessages([{ type: "text", text: summary }]);
-                        btn.textContent = '發送成功！';
                     } catch (sendErr) {
-                        alert("sendMessages 失敗: " + sendErr.message);
+                        alert("發送失敗: " + sendErr.message);
                         btn.disabled = false;
                         btn.textContent = "送出點餐";
                         return;
                     }
                 } else {
-                    // 用 shareTargetPicker 分享
-                    btn.textContent = '開啟分享選單...';
-                    if (liff.isApiAvailable("shareTargetPicker")) {
-                        try {
-                            const result = await liff.shareTargetPicker([{ type: "text", text: summary }]);
-                            if (result) {
-                                btn.textContent = '分享成功！';
-                            } else {
-                                alert("使用者取消分享");
-                                btn.disabled = false;
-                                btn.textContent = "送出點餐";
-                                return;
-                            }
-                        } catch (shareErr) {
-                            alert("shareTargetPicker 失敗: " + shareErr.message);
+                    // 不在 LINE 內，用分享功能
+                    try {
+                        const result = await liff.shareTargetPicker([{ type: "text", text: summary }]);
+                        if (!result) {
                             btn.disabled = false;
                             btn.textContent = "送出點餐";
                             return;
                         }
-                    } else {
-                        alert("請在 LINE 內開啟此頁面\n\ninClient=" + inClient + "\ncanSend=" + canSend);
+                    } catch (shareErr) {
+                        alert("分享失敗: " + shareErr.message);
                         btn.disabled = false;
                         btn.textContent = "送出點餐";
                         return;
