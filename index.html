@@ -521,14 +521,41 @@
                 const inClient = liff.isInClient();
                 const canSend = liff.isApiAvailable("sendMessages");
 
+                btn.textContent = '檢查中... inClient=' + inClient + ' canSend=' + canSend;
+
                 if (inClient && canSend) {
-                    await liff.sendMessages([{ type: "text", text: summary }]);
-                } else if (!inClient) {
-                    // 不在 LINE 內，用 shareTargetPicker 分享
+                    btn.textContent = '發送訊息中...';
+                    try {
+                        await liff.sendMessages([{ type: "text", text: summary }]);
+                        btn.textContent = '發送成功！';
+                    } catch (sendErr) {
+                        alert("sendMessages 失敗: " + sendErr.message);
+                        btn.disabled = false;
+                        btn.textContent = "送出點餐";
+                        return;
+                    }
+                } else {
+                    // 用 shareTargetPicker 分享
+                    btn.textContent = '開啟分享選單...';
                     if (liff.isApiAvailable("shareTargetPicker")) {
-                        await liff.shareTargetPicker([{ type: "text", text: summary }]);
+                        try {
+                            const result = await liff.shareTargetPicker([{ type: "text", text: summary }]);
+                            if (result) {
+                                btn.textContent = '分享成功！';
+                            } else {
+                                alert("使用者取消分享");
+                                btn.disabled = false;
+                                btn.textContent = "送出點餐";
+                                return;
+                            }
+                        } catch (shareErr) {
+                            alert("shareTargetPicker 失敗: " + shareErr.message);
+                            btn.disabled = false;
+                            btn.textContent = "送出點餐";
+                            return;
+                        }
                     } else {
-                        alert("請在 LINE 內開啟此頁面才能送出點餐");
+                        alert("請在 LINE 內開啟此頁面\n\ninClient=" + inClient + "\ncanSend=" + canSend);
                         btn.disabled = false;
                         btn.textContent = "送出點餐";
                         return;
