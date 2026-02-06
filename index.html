@@ -518,8 +518,21 @@
                 summary += `🌙 宵夜: ${getOptionName(SNACKS, selections.late_night)}\n`;
 
                 // 發送訊息
-                if (liff.isApiAvailable("sendMessages")) {
+                const inClient = liff.isInClient();
+                const canSend = liff.isApiAvailable("sendMessages");
+
+                if (inClient && canSend) {
                     await liff.sendMessages([{ type: "text", text: summary }]);
+                } else if (!inClient) {
+                    // 不在 LINE 內，用 shareTargetPicker 分享
+                    if (liff.isApiAvailable("shareTargetPicker")) {
+                        await liff.shareTargetPicker([{ type: "text", text: summary }]);
+                    } else {
+                        alert("請在 LINE 內開啟此頁面才能送出點餐");
+                        btn.disabled = false;
+                        btn.textContent = "送出點餐";
+                        return;
+                    }
                 }
 
                 // 顯示成功
