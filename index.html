@@ -518,35 +518,15 @@
                 summary += `🌙 宵夜: ${getOptionName(SNACKS, selections.late_night)}\n`;
 
                 // 發送訊息
-                const inClient = liff.isInClient();
-
                 btn.textContent = '發送中...';
 
-                if (inClient) {
-                    // 在 LINE 內，直接發送
-                    try {
-                        await liff.sendMessages([{ type: "text", text: summary }]);
-                    } catch (sendErr) {
-                        alert("發送失敗: " + sendErr.message);
-                        btn.disabled = false;
-                        btn.textContent = "送出點餐";
-                        return;
-                    }
-                } else {
-                    // 不在 LINE 內，用分享功能
-                    try {
-                        const result = await liff.shareTargetPicker([{ type: "text", text: summary }]);
-                        if (!result) {
-                            btn.disabled = false;
-                            btn.textContent = "送出點餐";
-                            return;
-                        }
-                    } catch (shareErr) {
-                        alert("分享失敗: " + shareErr.message);
-                        btn.disabled = false;
-                        btn.textContent = "送出點餐";
-                        return;
-                    }
+                try {
+                    await liff.sendMessages([{ type: "text", text: summary }]);
+                } catch (sendErr) {
+                    alert("發送失敗: " + sendErr.message + "\n\n請確認是在 LINE 內開啟此頁面");
+                    btn.disabled = false;
+                    btn.textContent = "送出點餐";
+                    return;
                 }
 
                 // 顯示成功
