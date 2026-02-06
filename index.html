@@ -529,7 +529,7 @@
 
             } catch (e) {
                 console.error(e);
-                alert("送出失敗，請重試");
+                alert("送出失敗: " + e.message + "\n\n是否在LINE內開啟: " + liff.isInClient() + "\nsendMessages可用: " + liff.isApiAvailable("sendMessages"));
                 btn.disabled = false;
                 btn.textContent = "送出點餐";
             }
