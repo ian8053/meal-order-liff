@@ -3,41 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>點餐系統</title>
+    <title>點餐系統 - 老公</title>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <style>
-        .menu-select {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            padding: 30px 20px;
-            max-width: 400px;
-            margin: 0 auto;
-        }
-        .menu-select h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        .menu-btn {
-            padding: 25px;
-            font-size: 20px;
-            border: none;
-            border-radius: 15px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: transform 0.2s;
-        }
-        .menu-btn:hover { transform: scale(1.02); }
-        .menu-btn.wife {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .menu-btn.husband {
-            background: linear-gradient(135deg, #4a90d9 0%, #2c5282 100%);
-            color: white;
-        }
-    </style>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -47,7 +14,7 @@
             padding-bottom: 80px;
         }
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4a90d9 0%, #2c5282 100%);
             color: white;
             padding: 20px 15px;
             text-align: center;
@@ -75,6 +42,7 @@
             gap: 8px;
         }
         .section-header .time { font-size: 12px; color: #666; font-weight: normal; }
+        .section-header .detail { font-size: 11px; color: #888; font-weight: normal; margin-left: auto; }
 
         .options { padding: 0 10px 10px; }
         .option {
@@ -87,10 +55,9 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .option:hover { border-color: #667eea; }
+        .option:hover { border-color: #4a90d9; }
         .option.selected { border-color: #4CAF50; background: #f0fff0; }
         .option.skip-selected { border-color: #f44336; background: #fff5f5; }
-        .option input { display: none; }
         .option .radio {
             width: 20px; height: 20px;
             border: 2px solid #ccc;
@@ -139,8 +106,17 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .sub-option:hover { border-color: #667eea; }
+        .sub-option:hover { border-color: #4a90d9; }
         .sub-option.selected { border-color: #4CAF50; background: #4CAF50; color: white; }
+
+        .fixed-item {
+            background: #e8f4fd;
+            padding: 12px 15px;
+            margin: 0 10px 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #2c5282;
+        }
 
         .submit-container {
             position: fixed;
@@ -186,7 +162,7 @@
         .close-btn {
             margin-top: 20px;
             padding: 15px 40px;
-            background: #667eea;
+            background: #4a90d9;
             color: white;
             border: none;
             border-radius: 10px;
@@ -198,22 +174,9 @@
 <body>
     <div id="loading" class="loading">載入中...</div>
 
-    <div id="menu-select" style="display:none;">
-        <div class="header">
-            <h1>🍽️ 明日點餐</h1>
-            <div class="date" id="selectDate"></div>
-            <div class="user" id="selectUserName"></div>
-        </div>
-        <div class="menu-select">
-            <h2>請選擇菜單</h2>
-            <button class="menu-btn wife" onclick="goToMenu('wife')">👩 老婆菜單</button>
-            <button class="menu-btn husband" onclick="goToMenu('husband')">👨 老公菜單</button>
-        </div>
-    </div>
-
     <div id="main" style="display:none;">
         <div class="header">
-            <h1>🍽️ 明日點餐（老婆）</h1>
+            <h1>🍽️ 明日點餐（老公）</h1>
             <div class="date" id="orderDate"></div>
             <div class="user" id="userName"></div>
         </div>
@@ -221,23 +184,32 @@
         <!-- 早餐 -->
         <div class="section">
             <div class="section-header" style="background:#FFF3E0;">
-                🍳 早餐 <span class="time">07:30-08:00</span>
+                ☕ 早餐 <span class="time">07:30-08:00</span>
             </div>
-            <div class="options" id="breakfast-options"></div>
+            <div class="fixed-item">
+                咖啡一份 + 牛奶 400ml
+            </div>
+            <div class="options">
+                <div class="option" data-meal="breakfast" data-value="coffee" onclick="selectOption('breakfast', 'coffee', this)">
+                    <div class="radio"></div>
+                    <div class="option-text">☕ 要喝咖啡</div>
+                </div>
+                <div class="option" data-meal="breakfast" data-value="skip" onclick="selectOption('breakfast', 'skip', this)">
+                    <div class="radio"></div>
+                    <div class="option-text option-skip">❌ 不喝</div>
+                </div>
+            </div>
         </div>
 
         <!-- 午餐 -->
         <div class="section">
             <div class="section-header" style="background:#E8F5E9;">
-                🍱 午餐 <span class="time">13:00-13:30</span>
+                🍱 午餐 <span class="time">12:00-12:30</span>
+                <span class="detail">肉300g + 飯250g + 青菜100g</span>
             </div>
             <div class="sub-section">
-                <div class="sub-section-title">🥩 肉類 (120g)</div>
+                <div class="sub-section-title">🥩 肉類 (300g)</div>
                 <div class="sub-options" id="lunch-meat"></div>
-            </div>
-            <div class="sub-section">
-                <div class="sub-section-title">🍚 澱粉 (≈80g飯)</div>
-                <div class="sub-options" id="lunch-carb"></div>
             </div>
             <div class="options">
                 <div class="option" onclick="toggleMealSkip('lunch')">
@@ -247,26 +219,15 @@
             </div>
         </div>
 
-        <!-- 下午點心 -->
-        <div class="section">
-            <div class="section-header" style="background:#FFF8E1;">
-                🍰 下午點心 <span class="time">15:30-16:00</span>
-            </div>
-            <div class="options" id="afternoon_snack-options"></div>
-        </div>
-
         <!-- 晚餐 -->
         <div class="section">
             <div class="section-header" style="background:#E3F2FD;">
-                🍽️ 晚餐 <span class="time">19:00-19:30</span>
+                🍽️ 晚餐 <span class="time">18:30-19:00</span>
+                <span class="detail">肉300g + 飯250g + 青菜100g</span>
             </div>
             <div class="sub-section">
-                <div class="sub-section-title">🥩 肉類 (120g)</div>
+                <div class="sub-section-title">🥩 肉類 (300g)</div>
                 <div class="sub-options" id="dinner-meat"></div>
-            </div>
-            <div class="sub-section">
-                <div class="sub-section-title">🍚 澱粉 (≈80g飯)</div>
-                <div class="sub-options" id="dinner-carb"></div>
             </div>
             <div class="options">
                 <div class="option" onclick="toggleMealSkip('dinner')">
@@ -274,14 +235,6 @@
                     <div class="option-text option-skip">❌ 晚餐不吃</div>
                 </div>
             </div>
-        </div>
-
-        <!-- 宵夜 -->
-        <div class="section">
-            <div class="section-header" style="background:#ECEFF1;">
-                🌙 宵夜 <span class="time">21:30-22:00</span>
-            </div>
-            <div class="options" id="late_night-options"></div>
         </div>
 
         <div class="submit-container">
@@ -302,35 +255,17 @@
         const LIFF_ID = "2009064844-ryRJYaBr";
         const API_URL = "https://cool-hill-d1b7.ian19910503.workers.dev/api/menu";
 
-        // 菜單資料（從 API 載入）
-        let BREAKFAST = [];
-        let SNACKS = [];
+        // 老公的肉類選項（從 API 載入）
         let MEATS = [];
-        let CARBS = [];
 
         // 選擇狀態
         let selections = {
             breakfast: null,
-            lunch: { meat: null, carb: null, skip: false },
-            afternoon_snack: null,
-            dinner: { meat: null, carb: null, skip: false },
-            late_night: null
+            lunch: { meat: null, skip: false },
+            dinner: { meat: null, skip: false }
         };
 
         let userProfile = null;
-
-        let selectedMenu = null; // 'wife' or 'husband'
-
-        function goToMenu(menu) {
-            if (menu === 'husband') {
-                window.location.href = 'husband.html';
-                return;
-            }
-            selectedMenu = menu;
-            document.getElementById("menu-select").style.display = "none";
-            document.getElementById("main").style.display = "block";
-            renderOptions();
-        }
 
         // 初始化
         async function init() {
@@ -343,34 +278,28 @@
                 }
 
                 userProfile = await liff.getProfile();
+                document.getElementById("userName").textContent = `👤 ${userProfile.displayName}`;
 
                 const tomorrow = new Date();
                 tomorrow.setDate(tomorrow.getDate() + 1);
-                const dateStr = tomorrow.toLocaleDateString("zh-TW", {
+                document.getElementById("orderDate").textContent = tomorrow.toLocaleDateString("zh-TW", {
                     month: "long", day: "numeric", weekday: "long"
                 });
-
-                // 設定選擇頁面的資訊
-                document.getElementById("selectUserName").textContent = `👤 ${userProfile.displayName}`;
-                document.getElementById("selectDate").textContent = dateStr;
-                document.getElementById("userName").textContent = `👤 ${userProfile.displayName}`;
-                document.getElementById("orderDate").textContent = dateStr;
 
                 // 從 API 載入菜單
                 document.getElementById("loading").textContent = "載入菜單中...";
                 try {
                     const menuRes = await fetch(API_URL);
                     const menu = await menuRes.json();
-                    BREAKFAST = menu.breakfast || [];
-                    SNACKS = menu.snacks || [];
                     MEATS = menu.meats || [];
-                    CARBS = menu.carbs || [];
                 } catch (menuErr) {
                     console.error("載入菜單失敗:", menuErr);
                 }
 
+                renderOptions();
+
                 document.getElementById("loading").style.display = "none";
-                document.getElementById("menu-select").style.display = "block";
+                document.getElementById("main").style.display = "block";
             } catch (e) {
                 console.error(e);
                 document.getElementById("loading").textContent = "載入失敗，請重試";
@@ -378,38 +307,9 @@
         }
 
         function renderOptions() {
-            // 早餐
-            renderRadioOptions("breakfast-options", BREAKFAST, "breakfast");
-
-            // 點心（下午點心、宵夜）
-            renderRadioOptions("afternoon_snack-options", SNACKS, "afternoon_snack");
-            renderRadioOptions("late_night-options", SNACKS, "late_night");
-
-            // 正餐（午餐、晚餐）
+            // 正餐肉類選項
             renderSubOptions("lunch-meat", MEATS, "lunch", "meat");
-            renderSubOptions("lunch-carb", CARBS, "lunch", "carb");
-
             renderSubOptions("dinner-meat", MEATS, "dinner", "meat");
-            renderSubOptions("dinner-carb", CARBS, "dinner", "carb");
-        }
-
-        function renderRadioOptions(containerId, options, mealId) {
-            const container = document.getElementById(containerId);
-            let html = options.map(opt => `
-                <div class="option" data-meal="${mealId}" data-value="${opt.id}" onclick="selectOption('${mealId}', '${opt.id}', this)">
-                    <div class="radio"></div>
-                    <div class="option-text">${opt.name}</div>
-                </div>
-            `).join('');
-
-            html += `
-                <div class="option" data-meal="${mealId}" data-value="skip" onclick="selectOption('${mealId}', 'skip', this)">
-                    <div class="radio"></div>
-                    <div class="option-text option-skip">❌ 不吃</div>
-                </div>
-            `;
-
-            container.innerHTML = html;
         }
 
         function renderSubOptions(containerId, options, mealId, subType) {
@@ -434,7 +334,7 @@
         }
 
         function selectSubOption(mealId, subType, value, element) {
-            if (selections[mealId].skip) return; // 如果已經選擇不吃，不能選子選項
+            if (selections[mealId].skip) return;
 
             selections[mealId][subType] = value;
 
@@ -453,19 +353,15 @@
         }
 
         function toggleMealSkip(mealId) {
-            const skipOption = document.querySelector(`.option[data-meal="${mealId}"][data-value="skip"]`) ||
-                              event.currentTarget;
+            const skipOption = event.currentTarget;
 
             if (selections[mealId].skip) {
-                // 取消不吃
                 selections[mealId].skip = false;
                 skipOption.classList.remove('skip-selected');
             } else {
-                // 選擇不吃，清除其他選擇
-                selections[mealId] = { meat: null, carb: null, skip: true };
+                selections[mealId] = { meat: null, skip: true };
                 skipOption.classList.add('skip-selected');
 
-                // 清除子選項的 UI
                 document.querySelectorAll(`[data-meal="${mealId}"].sub-option`).forEach(el => {
                     el.classList.remove('selected');
                 });
@@ -494,31 +390,27 @@
                 summary += `────────────\n`;
 
                 // 早餐
-                summary += `🍳 早餐: ${getOptionName(BREAKFAST, selections.breakfast)}\n`;
+                if (selections.breakfast === 'coffee') {
+                    summary += `☕ 早餐: 咖啡 + 牛奶400ml\n`;
+                } else {
+                    summary += `☕ 早餐: 不喝\n`;
+                }
 
                 // 午餐
                 if (selections.lunch.skip) {
                     summary += `🍱 午餐: 不吃\n`;
                 } else {
                     const lunchMeat = getOptionName(MEATS, selections.lunch.meat);
-                    const lunchCarb = getOptionName(CARBS, selections.lunch.carb);
-                    summary += `🍱 午餐: ${lunchMeat} + ${lunchCarb}\n`;
+                    summary += `🍱 午餐: ${lunchMeat}300g + 飯250g + 青菜100g\n`;
                 }
-
-                // 下午點心
-                summary += `🍰 下午點心: ${getOptionName(SNACKS, selections.afternoon_snack)}\n`;
 
                 // 晚餐
                 if (selections.dinner.skip) {
                     summary += `🍽️ 晚餐: 不吃\n`;
                 } else {
                     const dinnerMeat = getOptionName(MEATS, selections.dinner.meat);
-                    const dinnerCarb = getOptionName(CARBS, selections.dinner.carb);
-                    summary += `🍽️ 晚餐: ${dinnerMeat} + ${dinnerCarb}\n`;
+                    summary += `🍽️ 晚餐: ${dinnerMeat}300g + 飯250g + 青菜100g\n`;
                 }
-
-                // 宵夜
-                summary += `🌙 宵夜: ${getOptionName(SNACKS, selections.late_night)}\n`;
 
                 // 發送訊息
                 btn.textContent = '發送中...';
@@ -539,7 +431,7 @@
 
             } catch (e) {
                 console.error(e);
-                alert("送出失敗: " + e.message + "\n\n是否在LINE內開啟: " + liff.isInClient() + "\nsendMessages可用: " + liff.isApiAvailable("sendMessages"));
+                alert("送出失敗: " + e.message);
                 btn.disabled = false;
                 btn.textContent = "送出點餐";
             }
