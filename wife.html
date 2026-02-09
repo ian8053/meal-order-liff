@@ -6,6 +6,39 @@
     <title>點餐系統</title>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
+        .menu-select {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 30px 20px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .menu-select h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .menu-btn {
+            padding: 25px;
+            font-size: 20px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        .menu-btn:hover { transform: scale(1.02); }
+        .menu-btn.wife {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .menu-btn.husband {
+            background: linear-gradient(135deg, #4a90d9 0%, #2c5282 100%);
+            color: white;
+        }
+    </style>
+    <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -165,9 +198,22 @@
 <body>
     <div id="loading" class="loading">載入中...</div>
 
-    <div id="main" style="display:none;">
+    <div id="menu-select" style="display:none;">
         <div class="header">
             <h1>🍽️ 明日點餐</h1>
+            <div class="date" id="selectDate"></div>
+            <div class="user" id="selectUserName"></div>
+        </div>
+        <div class="menu-select">
+            <h2>請選擇菜單</h2>
+            <button class="menu-btn wife" onclick="goToMenu('wife')">👩 老婆菜單</button>
+            <button class="menu-btn husband" onclick="goToMenu('husband')">👨 老公菜單</button>
+        </div>
+    </div>
+
+    <div id="main" style="display:none;">
+        <div class="header">
+            <h1>🍽️ 明日點餐（老婆）</h1>
             <div class="date" id="orderDate"></div>
             <div class="user" id="userName"></div>
         </div>
@@ -273,6 +319,19 @@
 
         let userProfile = null;
 
+        let selectedMenu = null; // 'wife' or 'husband'
+
+        function goToMenu(menu) {
+            if (menu === 'husband') {
+                window.location.href = 'husband.html';
+                return;
+            }
+            selectedMenu = menu;
+            document.getElementById("menu-select").style.display = "none";
+            document.getElementById("main").style.display = "block";
+            renderOptions();
+        }
+
         // 初始化
         async function init() {
             try {
@@ -284,13 +343,18 @@
                 }
 
                 userProfile = await liff.getProfile();
-                document.getElementById("userName").textContent = `👤 ${userProfile.displayName}`;
 
                 const tomorrow = new Date();
                 tomorrow.setDate(tomorrow.getDate() + 1);
-                document.getElementById("orderDate").textContent = tomorrow.toLocaleDateString("zh-TW", {
+                const dateStr = tomorrow.toLocaleDateString("zh-TW", {
                     month: "long", day: "numeric", weekday: "long"
                 });
+
+                // 設定選擇頁面的資訊
+                document.getElementById("selectUserName").textContent = `👤 ${userProfile.displayName}`;
+                document.getElementById("selectDate").textContent = dateStr;
+                document.getElementById("userName").textContent = `👤 ${userProfile.displayName}`;
+                document.getElementById("orderDate").textContent = dateStr;
 
                 // 從 API 載入菜單
                 document.getElementById("loading").textContent = "載入菜單中...";
@@ -305,10 +369,8 @@
                     console.error("載入菜單失敗:", menuErr);
                 }
 
-                renderOptions();
-
                 document.getElementById("loading").style.display = "none";
-                document.getElementById("main").style.display = "block";
+                document.getElementById("menu-select").style.display = "block";
             } catch (e) {
                 console.error(e);
                 document.getElementById("loading").textContent = "載入失敗，請重試";
@@ -420,55 +482,53 @@
         async function submitOrder() {
             const btn = document.querySelector('.submit-btn');
             btn.disabled = true;
-            btn.textContent = '開始處理...';
+            btn.textContent = '送出中...';
 
             try {
                 const tomorrow = new Date();
                 tomorrow.setDate(tomorrow.getDate() + 1);
                 const dateStr = tomorrow.toLocaleDateString("zh-TW");
 
+                // 送出訂單到 API（扣備料 + 通知管理員）
+                const orderData = {
+                    userName: userProfile.displayName,
+                    userType: 'wife',
+                    selections: selections,
+                    date: dateStr
+                };
+
+                const response = await fetch(API_URL.replace('/menu', '/order'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.error || '訂單送出失敗');
+                }
+
+                // 組合顯示用的摘要
                 let summary = `📋 ${userProfile.displayName} 的點餐\n`;
                 summary += `📅 ${dateStr}\n`;
                 summary += `────────────\n`;
-
-                // 早餐
                 summary += `🍳 早餐: ${getOptionName(BREAKFAST, selections.breakfast)}\n`;
 
-                // 午餐
                 if (selections.lunch.skip) {
                     summary += `🍱 午餐: 不吃\n`;
                 } else {
-                    const lunchMeat = getOptionName(MEATS, selections.lunch.meat);
-                    const lunchCarb = getOptionName(CARBS, selections.lunch.carb);
-                    summary += `🍱 午餐: ${lunchMeat} + ${lunchCarb}\n`;
+                    summary += `🍱 午餐: ${getOptionName(MEATS, selections.lunch.meat)} + ${getOptionName(CARBS, selections.lunch.carb)}\n`;
                 }
 
-                // 下午點心
                 summary += `🍰 下午點心: ${getOptionName(SNACKS, selections.afternoon_snack)}\n`;
 
-                // 晚餐
                 if (selections.dinner.skip) {
                     summary += `🍽️ 晚餐: 不吃\n`;
                 } else {
-                    const dinnerMeat = getOptionName(MEATS, selections.dinner.meat);
-                    const dinnerCarb = getOptionName(CARBS, selections.dinner.carb);
-                    summary += `🍽️ 晚餐: ${dinnerMeat} + ${dinnerCarb}\n`;
+                    summary += `🍽️ 晚餐: ${getOptionName(MEATS, selections.dinner.meat)} + ${getOptionName(CARBS, selections.dinner.carb)}\n`;
                 }
 
-                // 宵夜
                 summary += `🌙 宵夜: ${getOptionName(SNACKS, selections.late_night)}\n`;
-
-                // 發送訊息
-                btn.textContent = '發送中...';
-
-                try {
-                    await liff.sendMessages([{ type: "text", text: summary }]);
-                } catch (sendErr) {
-                    alert("發送失敗: " + sendErr.message + "\n\n請確認是在 LINE 內開啟此頁面");
-                    btn.disabled = false;
-                    btn.textContent = "送出點餐";
-                    return;
-                }
 
                 // 顯示成功
                 document.getElementById("orderSummary").innerHTML = summary.replace(/\n/g, '<br>');
@@ -477,7 +537,7 @@
 
             } catch (e) {
                 console.error(e);
-                alert("送出失敗: " + e.message + "\n\n是否在LINE內開啟: " + liff.isInClient() + "\nsendMessages可用: " + liff.isApiAvailable("sendMessages"));
+                alert("送出失敗: " + e.message);
                 btn.disabled = false;
                 btn.textContent = "送出點餐";
             }

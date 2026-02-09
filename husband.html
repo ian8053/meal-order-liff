@@ -378,25 +378,43 @@
         async function submitOrder() {
             const btn = document.querySelector('.submit-btn');
             btn.disabled = true;
-            btn.textContent = '開始處理...';
+            btn.textContent = '送出中...';
 
             try {
                 const tomorrow = new Date();
                 tomorrow.setDate(tomorrow.getDate() + 1);
                 const dateStr = tomorrow.toLocaleDateString("zh-TW");
 
+                // 送出訂單到 API（扣備料 + 通知管理員）
+                const orderData = {
+                    userName: userProfile.displayName,
+                    userType: 'husband',
+                    selections: selections,
+                    date: dateStr
+                };
+
+                const response = await fetch(API_URL.replace('/menu', '/order'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.error || '訂單送出失敗');
+                }
+
+                // 組合顯示用的摘要
                 let summary = `📋 ${userProfile.displayName} 的點餐\n`;
                 summary += `📅 ${dateStr}\n`;
                 summary += `────────────\n`;
 
-                // 早餐
                 if (selections.breakfast === 'coffee') {
                     summary += `☕ 早餐: 咖啡 + 牛奶400ml\n`;
                 } else {
                     summary += `☕ 早餐: 不喝\n`;
                 }
 
-                // 午餐
                 if (selections.lunch.skip) {
                     summary += `🍱 午餐: 不吃\n`;
                 } else {
@@ -404,24 +422,11 @@
                     summary += `🍱 午餐: ${lunchMeat}300g + 飯250g + 青菜100g\n`;
                 }
 
-                // 晚餐
                 if (selections.dinner.skip) {
                     summary += `🍽️ 晚餐: 不吃\n`;
                 } else {
                     const dinnerMeat = getOptionName(MEATS, selections.dinner.meat);
                     summary += `🍽️ 晚餐: ${dinnerMeat}300g + 飯250g + 青菜100g\n`;
-                }
-
-                // 發送訊息
-                btn.textContent = '發送中...';
-
-                try {
-                    await liff.sendMessages([{ type: "text", text: summary }]);
-                } catch (sendErr) {
-                    alert("發送失敗: " + sendErr.message + "\n\n請確認是在 LINE 內開啟此頁面");
-                    btn.disabled = false;
-                    btn.textContent = "送出點餐";
-                    return;
                 }
 
                 // 顯示成功
