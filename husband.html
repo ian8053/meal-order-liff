@@ -219,6 +219,26 @@
             </div>
         </div>
 
+        <!-- 下午點心 -->
+        <div class="section">
+            <div class="section-header" style="background:#FFF8E1;">
+                🥛 下午點心 <span class="time">15:30-16:00</span>
+            </div>
+            <div class="fixed-item">
+                優酪乳 250ml
+            </div>
+            <div class="options">
+                <div class="option" data-meal="snack" data-value="yogurt" onclick="selectOption('snack', 'yogurt', this)">
+                    <div class="radio"></div>
+                    <div class="option-text">🥛 要喝優酪乳</div>
+                </div>
+                <div class="option" data-meal="snack" data-value="skip" onclick="selectOption('snack', 'skip', this)">
+                    <div class="radio"></div>
+                    <div class="option-text option-skip">❌ 不喝</div>
+                </div>
+            </div>
+        </div>
+
         <!-- 晚餐 -->
         <div class="section">
             <div class="section-header" style="background:#E3F2FD;">
@@ -261,6 +281,7 @@
         // 選擇狀態
         let selections = {
             breakfast: null,
+            snack: null,
             lunch: { meat: null, skip: false },
             dinner: { meat: null, skip: false }
         };
@@ -420,6 +441,12 @@
                 } else {
                     const lunchMeat = getOptionName(MEATS, selections.lunch.meat);
                     summary += `🍱 午餐: ${lunchMeat}300g + 飯250g + 青菜100g\n`;
+                }
+
+                if (selections.snack === 'yogurt') {
+                    summary += `🥛 下午點心: 優酪乳250ml\n`;
+                } else {
+                    summary += `🥛 下午點心: 不喝\n`;
                 }
 
                 if (selections.dinner.skip) {
